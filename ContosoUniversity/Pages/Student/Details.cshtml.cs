@@ -28,8 +28,14 @@ namespace ContosoUniversity.Pages.Student
                 return NotFound();
             }
 
-            Student = await _context.Students.FirstOrDefaultAsync(m => m.ID == id);
+            // Also read enrollment data for the selected student
+            Student = await _context.Students
+                .Include(s => s.Enrollments)
+                .ThenInclude(e => e.Course)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.ID == id);
 
+            
             if (Student == null)
             {
                 return NotFound();
