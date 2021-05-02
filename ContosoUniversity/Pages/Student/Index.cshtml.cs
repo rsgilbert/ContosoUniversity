@@ -24,11 +24,39 @@ namespace ContosoUniversity.Pages.Student
             _mvcOptions = mvcOptions.Value;
         }
 
-        public IList<Models.Student> Student { get;set; }
+        // sort
+        public string NameSort { get; set; }
+        public string DateSort { get; set; }
+        public string CurrentFilter { get; set; }
+        public string CurrentSort { get; set; }
 
-        public async Task OnGetAsync()
+        public IList<Models.Student> Students { get;set; }
+
+        public async Task OnGetAsync(string sortOrder)
         {
-            Student = await _context.Students.Take(
+            // using System
+            NameSort = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            DateSort = sortOrder == "Date" ? "date_desc" : "Date";
+
+            IQueryable<Models.Student> studentsIQ = from s in _context.Students select s;
+
+            switch(sortOrder)
+            {
+                case "name_desc":
+                    studentsIQ = studentsIQ.OrderByDescending(s => s.LastName);
+                    break;
+                case "Date":
+                    studentsIQ = studentsIQ.OrderBy(s => s.EnrollmentDate);
+                    break;
+                case "date_desc":
+                    studentsIQ = studentsIQ.OrderByDescending(s => s.EnrollmentDate);
+                    break;
+                default:
+                    studentsIQ = studentsIQ.OrderBy(s => s.LastName);
+                    break;
+
+            }
+            Students = await studentsIQ.AsNoTracking().Take(
                 _mvcOptions.MaxModelBindingCollectionSize).ToListAsync();
         }
     }
