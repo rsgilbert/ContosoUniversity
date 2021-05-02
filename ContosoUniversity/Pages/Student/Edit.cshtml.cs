@@ -30,7 +30,7 @@ namespace ContosoUniversity.Pages.Student
                 return NotFound();
             }
 
-            Student = await _context.Students.FirstOrDefaultAsync(m => m.ID == id);
+            Student = await _context.Students.FindAsync(id);
 
             if (Student == null)
             {
@@ -41,32 +41,31 @@ namespace ContosoUniversity.Pages.Student
 
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(int id)
         {
             if (!ModelState.IsValid)
             {
                 return Page();
             }
 
-            _context.Attach(Student).State = EntityState.Modified;
-
-            try
+            var studentToUpdate = await _context.Students.FindAsync(id);
+            if(studentToUpdate == null)
+            {
+                return NotFound();
+            }
+            if(await TryUpdateModelAsync<Models.Student>(
+                studentToUpdate,
+                "student",
+                s => s.FirstMidName,
+                s => s.LastName,
+                s => s.EnrollmentDate))
             {
                 await _context.SaveChangesAsync();
+                Console.WriteLine($"Updated {studentToUpdate}");
+                return RedirectToPage("./Index");
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!StudentExists(Student.ID))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return RedirectToPage("./Index");
+            return Page();
+            
         }
 
         private bool StudentExists(int id)
