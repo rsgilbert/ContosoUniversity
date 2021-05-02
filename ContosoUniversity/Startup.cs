@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ContosoUniversity.Data;
 
+
 namespace ContosoUniversity
 {
     public class Startup
@@ -29,6 +30,9 @@ namespace ContosoUniversity
 
             services.AddDbContext<SchoolContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("SchoolContext")));
+
+            // Add the database exception filter
+            services.AddDatabaseDeveloperPageExceptionFilter();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

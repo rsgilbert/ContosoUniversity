@@ -1,0 +1,3 @@
+﻿// Add NuGet package to provide ASP.NET Core middleware for EF Core error pages.
+// see https://docs.microsoft.com/en-us/aspnet/core/data/ef-rp/intro?view=aspnetcore-5.0&tabs=visual-studio
+Install-Package Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
