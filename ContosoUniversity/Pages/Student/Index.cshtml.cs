@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using ContosoUniversity.Data;
 using ContosoUniversity.Models;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+
+
 
 
 namespace ContosoUniversity.Pages.Student
@@ -16,12 +19,15 @@ namespace ContosoUniversity.Pages.Student
     {
         private readonly SchoolContext _context;
         private readonly MvcOptions _mvcOptions;
+        private readonly IConfiguration Configuration;
 
 
-        public IndexModel(SchoolContext context, IOptions<MvcOptions> mvcOptions)
+        public IndexModel(SchoolContext context, IOptions<MvcOptions> mvcOptions,
+                IConfiguration configuration)
         {
             _context = context;
             _mvcOptions = mvcOptions.Value;
+            Configuration = configuration;
         }
 
         // sort
@@ -30,13 +36,23 @@ namespace ContosoUniversity.Pages.Student
         public string CurrentFilter { get; set; }
         public string CurrentSort { get; set; }
 
-        public IList<Models.Student> Students { get;set; }
+        public PaginatedList<Models.Student> Students { get;set; }
 
-        public async Task OnGetAsync(string sortOrder, string searchString)
+        public async Task OnGetAsync(string sortOrder, string currentFilter, string searchString, int? pageIndex)
         {
-            // using System
+            CurrentSort = sortOrder;
             NameSort = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             DateSort = sortOrder == "Date" ? "date_desc" : "Date";
+
+            if(searchString != null)
+            {
+                // A search value has been provided
+                pageIndex = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
 
             CurrentFilter = searchString;
 
@@ -65,8 +81,10 @@ namespace ContosoUniversity.Pages.Student
                     break;
 
             }
-            Students = await studentsIQ.AsNoTracking().Take(
-                _mvcOptions.MaxModelBindingCollectionSize).ToListAsync();
+
+            var pageSize = Configuration.GetValue("PageSize", 3);
+            Students = await PaginatedList<Models.Student>.CreateAsync(
+                studentsIQ.AsNoTracking(), pageIndex ?? 1, pageSize);
         }
     }
 }
