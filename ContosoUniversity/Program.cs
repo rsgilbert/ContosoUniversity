@@ -29,6 +29,7 @@ namespace ContosoUniversity
 
 
         // Create the database if it does not exist
+        // For use when we use migrations and not dropping and then recreating db
         public static void CreateDbIfNotExists(IHost host)
         {
             using(var scope = host.Services.CreateScope())
@@ -37,11 +38,35 @@ namespace ContosoUniversity
                 try
                 {
                     var context = services.GetRequiredService<SchoolContext>();
-                    context.Database.EnsureCreated();
+         
                     // Seed database
                     DbInitializer.Initialize(context);
                 }
                 catch(Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred when creating the database");
+                }
+            }
+        }
+
+        public static void CreateDbIfNotExistsNoMigrations(IHost host)
+        {
+            using (var scope = host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<SchoolContext>();
+                    
+                    // Drop DB to create a new one 
+                    // Does not rely on migrations history
+                    // Designed for testing and rapid prototyping
+                    context.Database.EnsureCreated();
+                    // Seed database
+                    DbInitializer.Initialize(context);
+                }
+                catch (Exception ex)
                 {
                     var logger = services.GetRequiredService<ILogger<Program>>();
                     logger.LogError(ex, "An error occurred when creating the database");
